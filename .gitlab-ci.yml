@@ -1,0 +1,29 @@
+stages:
+  - validate
+
+validate_logstash:
+  image: docker.elastic.co/logstash/logstash:8.13.0
+  stage: validate
+  script:
+    - echo "🔍 Validando sintaxe dos arquivos .conf do Logstash..."
+    - set -e 
+    - |
+      for file in logstash/*.conf; do
+        echo "📁 Verificando: $file"
+        logstash --config.test_and_exit -f "$file"
+      done
+    - echo "✅ Todos os arquivos .conf foram validados com sucesso."
+  timeout: 5 minutes
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+validate_python:
+  image: python:3.10
+  stage: validate
+  script:
+    - pip install flake8 black
+    - echo "🔍 Validando com flake8 (estrutura e erros básicos)..."
+    - flake8 python_scripts/
+    - echo "🎨 Verificando formatação com black (modo check)..."
+    - black --check python_scripts/

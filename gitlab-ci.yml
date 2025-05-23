@@ -1,0 +1,32 @@
+stages:
+  - validate
+
+validate_logstash:
+  image: docker.elastic.co/logstash/logstash:8.13.0
+  stage: validate
+  script:
+    - echo "🔍 Validando sintaxe dos arquivos .conf do Logstash..."
+    - |
+      for file in $(ls logstash/*.conf); do
+        echo "📁 Verificando: $file"
+        if logstash --config.test_and_exit -f "$file"; then
+          echo "✅ $file está válido."
+        else
+          echo "❌ ERRO: Sintaxe inválida no arquivo: $file"
+          exit 1
+        fi
+      done
+  only:
+    - merge_requests
+    - develop
+
+
+validate_python:
+  image: python:3.10
+  stage: validate
+  script:
+    - pip install flake8 black
+    - echo "🔍 Validando com flake8 (estrutura e erros básicos)..."
+    - flake8 python_scripts/
+    - echo "🎨 Verificando formatação com black (modo check)..."
+    - black --check python_scripts/
