@@ -1,0 +1,43 @@
+PUT _transform/pipeline_latest_status
+{
+  "source": {
+    "index": "pipeline-monitoring"
+  },
+  "dest": {
+    "index": "pipeline-monitoring-latest"
+  },
+  "pivot": {
+    "group_by": {
+      "pipeline": {
+        "terms": {
+          "field": "pipeline.keyword"
+        }
+      }
+    },
+    "aggregations": {
+      "latest_timestamp": {
+        "max": {
+          "field": "timestamp"
+        }
+      },
+      "last_status": {
+        "top_metrics": {
+          "metrics": [{ "field": "status.keyword" }],
+          "sort": { "timestamp": "desc" }
+        }
+      },
+      "last_status_tipo": {
+        "top_metrics": {
+          "metrics": [{ "field": "status_tipo.keyword" }],
+          "sort": { "timestamp": "desc" }
+        }
+      },
+      "last_interval_data": {
+        "top_metrics": {
+          "metrics": [{ "field": "interval_data.keyword" }],
+          "sort": { "timestamp": "desc" }
+        }
+      }
+    }
+  }
+}
