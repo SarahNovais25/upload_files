@@ -1,0 +1,8 @@
+def last_timestamp = null;
+
+if (ctx.payload.hits.total > 0 && ctx.payload.hits.hits.length > 0) {
+  def hit = ctx.payload.hits.hits[0];
+  if (hit._source.containsKey('@timestamp')) {
+    last_timestamp = hit._source['@timestamp'];
+  }
+}
