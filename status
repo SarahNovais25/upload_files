@@ -1,23 +1,37 @@
-Bom dia, time!
 
-Como parte do nosso acompanhamento diário de monitoramento de pipelines no Elastic, estou compartilhando o status atual dos índices que apresentam Status NOK nas últimas 24 horas.
+Boa tarde, time.
 
-O objetivo desse acompanhamento é garantir que todos os pipelines estejam entregando dados conforme o esperado, identificando rapidamente possíveis falhas ou interrupções no fluxo de ingestão.
+Finalizando o acompanhamento de hoje sobre o status dos pipelines monitorados no Elastic:
 
-Índices com Status NOK:
-	•	bra-denodo-events
-✅ Já resolvido. O problema estava relacionado a um erro no cliente e o @Alan estava acompanhando a correção.
-	•	bra-dynatrace-tools-events
-🔎 Necessário verificar.
-	•	bra-hk-malha-batch-events
-⚠️ Último dado recebido em 16/06/2025 às 06:36:55.660. Saiu do padrão e estamos acompanhando para verificar se continuará sem novos dados.
+Situação Atual:
+	•	Total de pipelines monitorados: 105
+	•	Pipelines com status OK: 103
+	•	Pipelines com status NOK: 2
+
+Os dois índices que permanecem com status NOK no momento são:
+	•	bra-grafana-dcoss-events
 	•	cmdb-conciliacao
-🔎 Necessário verificar.
-	•	dynatrace-dynatrace-metrics-billing-application-replay-v2
-🔎 Necessário verificar.
-	•	dynatrace-metrics-billing-application-v2
-🔎 Necessário verificar.
-	•	ingestao-dynatrace-dps
-🔎 Necessário verificar.
-	•	itsi-matriz-criticidade
-🔎 Necessário verificar.
+
+(Apenas reforçando que o segundo já estava em tratativa e foi ajustado, mas pode estar levando um tempo para refletir no monitoramento.)
+
+⸻
+
+Retorno dos pipelines que estavam anteriormente com NOK:
+	•	bra-hk-malha-batch-events:
+✅ Normalizado após alinhamento entre Alan e Hagamenon.
+	•	cmdb-conciliacao:
+✅ Foi ajustado pelo Diego.
+	•	dynatrace-dynatrace-metrics-billing-application-replay-v2:
+✅ Pipeline retirado do monitoramento, pois não está mais sendo utilizado.
+	•	dynatrace-metrics-billing-application-v2:
+✅ Também retirado do monitoramento por não estar mais em uso.
+	•	ingestao-dynatrace-dps:
+✅ Problema de integração com a API Dynatrace, normalizado conforme retorno do Diego.
+	•	itsi-matriz-criticidade:
+✅ Range da query foi ampliado para melhor captura de dados.
+
+⸻
+
+Se houver qualquer alteração ou novo apontamento, podemos atualizar o painel amanhã pela manhã.
+
+Obrigada a todos pelo apoio nas tratativas!
