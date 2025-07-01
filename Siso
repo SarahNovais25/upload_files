@@ -1,0 +1,23 @@
+"body": {
+  "source": {
+    "problemtitle": "BRA_SBA_ELK_PRD_ATOPS",
+    "problemid": "{{ctx.payload.hits.total}}",
+    "problemdetailstext": "Production | N/A | ERROR | SERVICE | N/A | N/A",
+    "problemdetailsjson": "{{#ctx.payload.hits.hits}}*** WATCHER ALERT ALMA ***\nOrigin: BRA_SBA_ELK_PRD_ATOPS\nPipeline: {{_source.pipeline}}\nTimestamp: {{_source.timestamp}}\nMessage: Pipeline {{_source.pipeline}} está com status NOK desde a última execução em {{_source.timestamp}}\n\n{{/ctx.payload.hits.hits}}",
+    "ServiceNowInfo": {
+      "Severity": "P5",
+      "Type": "alert",
+      "Category": "",
+      "Description": "{{#ctx.payload.hits.hits}}Pipeline {{_source.pipeline}} com status NOK desde {{_source.timestamp}}\n{{/ctx.payload.hits.hits}}"
+    },
+    "message": "{{#ctx.payload.hits.hits}}Pipeline: {{_source.pipeline}} | Timestamp: {{_source.timestamp}}\n{{/ctx.payload.hits.hits}}",
+    "origin": "BRA_SBA_ELK_PRD_ATOPS",
+    "pid": "{{ctx.payload.hits.total}}",
+    "state": "OPEN",
+    "entity": "BRA_SBA_ELK_PRD_ATOPS"
+  },
+  "lang": "mustache",
+  "options": {
+    "content_type": "application/json; charset=UTF-8"
+  }
+}
