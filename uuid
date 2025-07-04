@@ -1,0 +1,27 @@
+PUT _watcher/watch/exemplo_uuid
+{
+  "trigger": {
+    "schedule": {
+      "interval": "1h"
+    }
+  },
+  "input": {
+    "none": {}
+  },
+  "transform": {
+    "script": {
+      "source": """
+        import java.util.UUID;
+        String uuid = UUID.randomUUID().toString();
+        return ['uuid': uuid];
+      """
+    }
+  },
+  "actions": {
+    "log_example": {
+      "logging": {
+        "text": "UUID gerado: {{ctx.payload.uuid}}"
+      }
+    }
+  }
+}
