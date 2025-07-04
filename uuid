@@ -1,4 +1,4 @@
-PUT _watcher/watch/exemplo_uuid
+PUT _watcher/watch/webhook_com_uuid
 {
   "trigger": {
     "schedule": {
@@ -18,9 +18,20 @@ PUT _watcher/watch/exemplo_uuid
     }
   },
   "actions": {
-    "log_example": {
-      "logging": {
-        "text": "UUID gerado: {{ctx.payload.uuid}}"
+    "enviar_webhook": {
+      "webhook": {
+        "method": "POST",
+        "url": "https://exemplo.seusistema.com/api/receber",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": """
+        {
+          "mensagem": "UUID gerado com sucesso.",
+          "uuid": "{{ctx.payload.uuid}}",
+          "data": "{{ctx.execution_time}}"
+        }
+        """
       }
     }
   }
