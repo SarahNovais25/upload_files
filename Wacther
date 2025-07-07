@@ -1,58 +1,9 @@
-PUT _watcher/watch/alerta_status_nok
-{
-  "trigger": {
-    "schedule": {
-      "interval": "1m"
-    }
-  },
-  "input": {
-    "search": {
-      "request": {
-        "indices": ["indice-monitoring"],
-        "body": {
-          "query": {
-            "bool": {
-              "filter": [
-                { "term": { "status": "NOK" } },
-                {
-                  "range": {
-                    "timestamp": {
-                      "gte": "now-10m"
-                    }
-                  }
-                }
-              ]
-            }
-          },
-          "size": 1
-        }
-      }
-    }
-  },
-  "condition": {
-    "script": {
-      "source": "ctx.payload.hits.total.value > 0"
-    }
-  },
-  "actions": {
-    "notify_teams": {
-      "webhook": {
-        "method": "POST",
-        "url": "https://outlook.office.com/webhook/SEU_WEBHOOK_AQUI",
-        "headers": {
-          "Content-Type": "application/json"
-        },
-        "body": """
-        {
-          "@type": "MessageCard",
-          "@context": "http://schema.org/extensions",
-          "summary": "Alerta: status NOK detectado",
-          "themeColor": "FF0000",
-          "title": "🚨 Status NOK no índice",
-          "text": "Foi detectado um documento com status **NOK** no índice `indice-monitoring` nos últimos 10 minutos."
-        }
-        """
-      }
-    }
+"condition": {
+  "script": {
+    "source": """
+      ZonedDateTime now = ZonedDateTime.ofInstant(Instant.ofEpochMilli(ctx.trigger.scheduled_time.getMillis()), ZoneId.of('America/Sao_Paulo'));
+      int day = now.getDayOfWeek().getValue();
+      return day >= 1 && day <= 5;
+    """
   }
 }
