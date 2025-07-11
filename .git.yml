@@ -1,0 +1,48 @@
+stages:
+  - validate
+
+validate_conf_files:
+  stage: validate
+  tags:
+    - shell-runner
+  rules:
+    - changes:
+        - "**/*.conf"
+      when: always
+    - when: never
+  script:
+    - echo "🔍 Verificando arquivos .conf modificados em relação à branch develop..."
+    - git fetch origin develop
+    - |
+      MODIFIED_FILES=$(git diff --name-only origin/develop...HEAD | grep '\.conf$' || true)
+
+      if [ -z "$MODIFIED_FILES" ]; then
+        echo "✅ Nenhum arquivo .conf modificado. Nada para validar."
+        exit 0
+      fi
+
+      echo "📄 Arquivos .conf modificados:"
+      echo "$MODIFIED_FILES"
+
+      STATUS=0
+
+      for file in $MODIFIED_FILES; do
+        echo ""
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "🧪 Validando arquivo: $file"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+        VALIDATION_OUTPUT=$(logstash --config.test_and_exit -f "$file" 2>&1)
+
+        if [ $? -ne 0 ]; then
+          echo "❌ Erro de validação no arquivo: $file"
+          echo "🔎 Detalhes do erro:"
+          echo "$VALIDATION_OUTPUT"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          STATUS=1
+        else
+          echo "✅ Arquivo validado com sucesso: $file"
+        fi
+      done
+
+      exit $STATUS
