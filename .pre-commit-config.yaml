@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: validate-logstash
+        name: Validate Logstash files
+        entry: python scripts/validate_logstash.py
+        language: system
+        types: [file]
+        files: \.conf$
