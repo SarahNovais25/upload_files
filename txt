@@ -1,0 +1,7 @@
+### 🧪 Validação automática com Pre-commit
+
+Este projeto valida arquivos `.conf` do Logstash automaticamente antes de cada commit.
+
+#### 1. Instale o `pre-commit`:
+```bash
+pip install pre-commit
