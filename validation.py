@@ -67,11 +67,46 @@ def validate_semantic_errors(file_path):
         lines = content.splitlines()
 
     # (1) Verificações simples por linha
-    line_patterns = {
-        r"add_field\s*=>\s*{\s*['\"]?.+['\"]?\s*}": "add_field com valor, mas sem chave (faltando =>)",
-        r"add_field\s*=>\s*{\s*}": "add_field => {} vazio",
-        r"remove_field\s*=>\s*{\s*}": "remove_field => {} vazio"
-    }
+   line_patterns = {
+    # mutate
+    r"add_field\s*=>\s*{\s*['\"]?.+['\"]?\s*}": "add_field com valor, mas sem chave (faltando =>)",
+    r"add_field\s*=>\s*{\s*}": "add_field => {} vazio",
+    r"remove_field\s*=>\s*{\s*}": "remove_field => {} vazio",
+    r"rename\s*=>\s*{\s*['\"]?\s*['\"]?\s*=>\s*['\"]?\s*['\"]?\s*}": "rename com chave e valor vazios",
+    r"convert\s*=>\s*{\s*[^}\s]+\s*=>\s*['\"]{0,1}\s*['\"]{0,1}\s*}": "convert com tipo vazio",
+    r"gsub\s*=>\s*\[\s*['\"]?[^,\]]+['\"]?\s*(,\s*['\"][^'\"]*['\"])?\s*\]": "gsub com parâmetros incompletos",
+
+    # grok
+    r"grok\s*{[^}]*match\s*=>\s*{\s*}": "grok com match vazio",
+
+    # date
+    r"date\s*{[^}]*match\s*=>\s*\[\s*\]": "date com match vazio",
+
+    # aggregate
+    r"aggregate\s*{[^}]*task_id\s*=>\s*[\"']?\s*[\"']?": "aggregate sem task_id",
+    r"aggregate\s*{[^}]*map\s*=>\s*{\s*}": "aggregate com map vazio",
+
+    # clone
+    r"clone\s*{[^}]*clones\s*=>\s*\[\s*\]": "clone com clones vazio",
+
+    # ruby
+    r"ruby\s*{[^}]*code\s*=>\s*['\"]{0,1}\s*['\"]{0,1}": "ruby com code vazio",
+
+    # if (condição)
+    r"if\s*\(\s*\)": "if com condição vazia",
+
+    # split
+    r"split\s*{[^}]*field\s*=>\s*['\"]{0,1}\s*['\"]{0,1}": "split com field vazio",
+
+    # prune
+    r"prune\s*{[^}]*whitelist_names\s*=>\s*\[\s*\]": "prune com whitelist_names vazio",
+    r"prune\s*{[^}]*blacklist_names\s*=>\s*\[\s*\]": "prune com blacklist_names vazio",
+
+    # fingerprint
+    r"fingerprint\s*{[^}]*source\s*=>\s*['\"]{0,1}\s*['\"]{0,1}": "fingerprint com source vazio",
+    r"fingerprint\s*{[^}]*method\s*=>\s*['\"]{0,1}\s*['\"]{0,1}": "fingerprint com method vazio"
+}
+
 
     for i, line in enumerate(lines, start=1):
         for pattern, description in line_patterns.items():
