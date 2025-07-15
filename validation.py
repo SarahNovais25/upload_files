@@ -58,6 +58,28 @@ def find_empty_or_invalid_mutate_blocks(content, file_path):
             errors.append(f"↳ {file_path}: bloco mutate vazio ou inválido iniciado na linha {line_num}")
 
     return errors
+    
+def check_unbalanced_braces(content, file_path):
+    errors = []
+    stack = []
+    lines = content.splitlines()
+
+    for i, line in enumerate(lines, start=1):
+        for char in line:
+            if char == "{":
+                stack.append(i)  # Guarda linha de abertura
+            elif char == "}":
+                if not stack:
+                    errors.append(f"↳ {file_path}: chave '}}' extra na linha {i}")
+                else:
+                    stack.pop()
+
+    if stack:
+        for unmatched_line in stack:
+            errors.append(f"↳ {file_path}: chave '{{' não fechada iniciada na linha {unmatched_line}")
+
+    return errors
+
 
 def validate_semantic_errors(file_path):
     errors = []
@@ -117,6 +139,8 @@ def validate_semantic_errors(file_path):
 
     # (2) Verificação de mutate vazio
     errors.extend(find_empty_or_invalid_mutate_blocks(content, file_path))
+
+    errors.extend(check_unbalanced_braces(content, file_path))
 
     return errors
 
