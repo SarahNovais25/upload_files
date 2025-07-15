@@ -27,31 +27,61 @@ def validate_with_logstash(files):
         )
         if result.returncode != 0:
             print("❌ Erro(s) de sintaxe detectado(s) pelo Logstash:")
-            print(result.stderr.strip())
+            lines = result.stderr.strip().splitlines()
+            relevant_errors = []
+            for line in lines:
+                if any(keyword in line.lower() for keyword in ["error", "exception", "could not parse", "expected", "invalid"]):
+                    relevant_errors.append(line)
+            if relevant_errors:
+                print("\n--- Mensagens relevantes ---")
+                for err in relevant_errors:
+                    print(err)
+                print("----------------------------")
+            else:
+                print("⚠️ Nenhum erro de sintaxe aparente. Pode ser apenas aviso do Java ou Logstash.")
+                print("↳ Última linha capturada:")
+                print(lines[-1] if lines else "(vazio)")
         return result.returncode == 0
     except FileNotFoundError:
         print("❌ Logstash não encontrado. Verifique se está no PATH ou configure o caminho no script.")
         return False
 
+def find_empty_or_invalid_mutate_blocks(content, file_path):
+    errors = []
+    pattern = re.compile(r"(?i)(mutate\s*{.*?})", re.DOTALL)
+    for match in pattern.finditer(content):
+        block = match.group(0)
+        start_index = match.start()
+        line_num = content[:start_index].count("\n") + 1
+
+        if not re.search(r"(add_field|remove_field|gsub|convert|rename|update)", block, re.IGNORECASE):
+            errors.append(f"↳ {file_path}: bloco mutate vazio ou inválido iniciado na linha {line_num}")
+
+    return errors
+
 def validate_semantic_errors(file_path):
-    with open(file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    patterns = {
-        r"add_field\s*=>\s*{\s*['"]?.+['"]?\s*}": "add_field com valor, mas sem chave (faltando =>)",
-        r"add_field\s*=>\s*{\s*}": "add_field => {} vazio",
-        r"remove_field\s*=>\s*{\s*}": "remove_field => {} vazio",
-        r"mutate\s*{\s*}": "bloco mutate vazio"
-    }
-
     errors = []
 
+    with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        lines = content.splitlines()
+
+    # (1) Verificações simples por linha
+    line_patterns = {
+        r"add_field\s*=>\s*{\s*['\"]?.+['\"]?\s*}": "add_field com valor, mas sem chave (faltando =>)",
+        r"add_field\s*=>\s*{\s*}": "add_field => {} vazio",
+        r"remove_field\s*=>\s*{\s*}": "remove_field => {} vazio"
+    }
+
     for i, line in enumerate(lines, start=1):
-        for pattern, description in patterns.items():
+        for pattern, description in line_patterns.items():
             match = re.search(pattern, line, re.IGNORECASE)
             if match:
                 col = match.start() + 1
                 errors.append(f"↳ {file_path}: linha {i}, coluna {col} → {description}")
+
+    # (2) Verificação de mutate vazio
+    errors.extend(find_empty_or_invalid_mutate_blocks(content, file_path))
 
     return errors
 
