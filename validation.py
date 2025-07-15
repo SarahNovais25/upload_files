@@ -26,7 +26,8 @@ def validate_with_logstash(files):
             text=True
         )
         if result.returncode != 0:
-            print(result.stderr)
+            print("❌ Erro(s) de sintaxe detectado(s) pelo Logstash:")
+            print(result.stderr.strip())
         return result.returncode == 0
     except FileNotFoundError:
         print("❌ Logstash não encontrado. Verifique se está no PATH ou configure o caminho no script.")
@@ -34,19 +35,25 @@ def validate_with_logstash(files):
 
 def validate_semantic_errors(file_path):
     with open(file_path, "r", encoding="utf-8") as f:
-        content = f.read()
+        lines = f.readlines()
 
-    patterns = [
-        r"add_field\s*=>\s*{\s*}",         # add_field vazio
-        r"remove_field\s*=>\s*{\s*}",      # remove_field vazio
-        r"mutate\s*{\s*}"                   # mutate sem conteúdo
-    ]
+    patterns = {
+        r"add_field\s*=>\s*{\s*['"]?.+['"]?\s*}": "add_field com valor, mas sem chave (faltando =>)",
+        r"add_field\s*=>\s*{\s*}": "add_field => {} vazio",
+        r"remove_field\s*=>\s*{\s*}": "remove_field => {} vazio",
+        r"mutate\s*{\s*}": "bloco mutate vazio"
+    }
 
-    for pattern in patterns:
-        if re.search(pattern, content, re.IGNORECASE):
-            print(f"❌ Erro lógico no arquivo {file_path}: padrão inválido `{pattern}`")
-            return False
-    return True
+    errors = []
+
+    for i, line in enumerate(lines, start=1):
+        for pattern, description in patterns.items():
+            match = re.search(pattern, line, re.IGNORECASE)
+            if match:
+                col = match.start() + 1
+                errors.append(f"↳ {file_path}: linha {i}, coluna {col} → {description}")
+
+    return errors
 
 def main():
     modified_files = get_modified_conf_files()
@@ -54,15 +61,23 @@ def main():
         print("✅ Nenhum arquivo .conf modificado.")
         return
 
-    semantic_errors = [f for f in modified_files if not validate_semantic_errors(f)]
+    all_errors = []
 
-    if semantic_errors:
-        print("🛑 Corrija os erros lógicos antes de fazer commit.")
+    for file_path in modified_files:
+        semantic_errors = validate_semantic_errors(file_path)
+        if semantic_errors:
+            all_errors.extend(semantic_errors)
+
+    if all_errors:
+        print("❌ Erro(s) lógico(s) detectado(s):")
+        for err in all_errors:
+            print(err)
+        print("🛑 Corrija os erros acima antes de fazer commit.")
         sys.exit(1)
 
     print("🚀 Executando validação sintática com Logstash...")
     if not validate_with_logstash(modified_files):
-        print("🛑 Erros de sintaxe detectados pelo Logstash.")
+        print("🛑 Corrija os erros de sintaxe acima antes de fazer commit.")
         sys.exit(1)
 
     print("✅ Todos os arquivos foram validados com sucesso.")
