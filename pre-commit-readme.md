@@ -1,4 +1,4 @@
-# 🧠 Projeto de Validação com Logstash + Pre-commit
+# 🧠 Projeto de Validação com Logstash - Pre-commit
 
 Este projeto utiliza `pre-commit` para validar automaticamente arquivos `.conf` do Logstash antes de cada commit. Isso ajuda a evitar que arquivos com erro sejam versionados por engano.
 
@@ -13,9 +13,6 @@ Este projeto utiliza `pre-commit` para validar automaticamente arquivos `.conf` 
   - [⚙️ Como configurar](#-como-configurar)
   - [🧪 Como funciona o hook](#-como-funciona-o-hook)
   - [📋 Arquivos envolvidos](#-arquivos-envolvidos)
-  - [📦 Estrutura esperada](#-estrutura-esperada)
-  - [🔧 Dicas úteis](#-dicas-úteis)
-  - [🧯 Problemas comuns](#-problemas-comuns)
 
 ---
 
@@ -29,6 +26,17 @@ Este projeto valida automaticamente configurações do Logstash com base no cont
 
 O `pre-commit` é uma ferramenta que executa scripts automaticamente antes do commit. Aqui, usamos para validar arquivos `.conf` com o Logstash.
 
+> ⚠️ **Observação importante:**  
+> Se ocorrer erro ao instalar o `pre-commit`, crie um ambiente virtual com Python e ative antes de instalar:
+>
+> ```bash
+> python -m venv .venv
+> source .venv/bin/activate       # Windows: .venv\Scripts\activate
+> pip install pre-commit
+> ```
+
+---
+
 ### ✅ Requisitos obrigatórios
 
 | Requisito | Descrição | Instalar em |
@@ -41,7 +49,65 @@ O `pre-commit` é uma ferramenta que executa scripts automaticamente antes do co
 
 ### ⚙️ Como configurar
 
-1. (Opcional) Ative um ambiente virtual:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # No Windows: .venv\Scripts\activate
+Instale o `pre-commit`:
+
+```bash
+pip install pre-commit
+```
+
+Instale os hooks do repositório:
+
+```bash
+pre-commit install
+```
+
+Esse comando adiciona um *hook* no Git que será executado automaticamente em cada `git commit`.
+
+---
+
+### 🧪 Como funciona o hook
+
+Você edita ou adiciona um arquivo `.conf` dentro do repositório .ce executa:
+
+```bash
+git add nome.conf
+git commit -m "minha mensagem"
+```
+
+O `pre-commit` irá:
+
+- Verificar os arquivos `.conf` modificados
+- Rodar `logstash --config.test_and_exit` com nível `fatal` (ocultando `info`, `warn`)
+- **Bloquear o commit se houver erro de validação**
+
+---
+
+### 📋 Arquivos envolvidos
+
+#### `.pre-commit-config.yaml`
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: validate-logstash
+        name: Validate Logstash .conf files
+        entry: python scripts/validate_logstash.py
+        language: system
+        types: [file]
+        files: \.conf$
+```
+
+#### `scripts/validate_logstash.py`
+
+Esse script detecta arquivos `.conf` modificados e executa:
+
+```bash
+logstash --log.level fatal --config.test_and_exit -f arquivo.conf
+```
+
+Você também pode executá-lo manualmente com:
+
+```bash
+python scripts/validate_logstash.py
+```
