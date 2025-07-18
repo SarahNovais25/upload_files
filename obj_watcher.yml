@@ -1,0 +1,18 @@
+watchers:
+  bra-ingestao-arbor:
+    interval: "5m"
+    gte: "now-1d/d"
+    lt: "now"
+    threshold: 100
+
+  paranoa_dw_oee:
+    interval: "10m"
+    gte: "now-2h/h"
+    lt: "now"
+    threshold: 300
+
+  paranoa_dw_operacao:
+    interval: "15m"
+    gte: "now-12h/h"
+    lt: "now"
+    threshold: 500
