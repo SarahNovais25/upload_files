@@ -1,0 +1,12 @@
+[get_watchers_status.py] → gera arquivo e atualiza índice
+        ↓
+[ansible + git] → versiona watchers_status_data.py no GitHub
+        ↓
+[logstash (a cada 30 min)] → lê watcher_metadata
+        ↓
+Se needs_update = true:
+    → cria/atualiza watcher via API
+    → atualiza needs_update = false
+
+
+
