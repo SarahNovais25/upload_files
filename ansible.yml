@@ -1,0 +1,38 @@
+- name: Agendar execução do script Python a cada 30 min
+  ansible.builtin.cron:
+    name: "run_watchers_metadata_update"
+    minute: "*/30"
+    job: "/usr/bin/python3 /caminho/para/seu_script.py >> /var/log/watchers.log 2>&1"
+
+  
+- name: Versionar arquivo watchers no GitHub
+  hosts: localhost
+  vars:
+    script_path: "/caminho/do/script/get_watchers_status.py"
+    repo_path: "/caminho/para/repositorio"
+    file_to_commit: "watchers_status_data.py"
+  tasks:
+
+    - name: Executar script para gerar arquivo de metadados
+      ansible.builtin.command: python {{ script_path }}
+      args:
+        chdir: "{{ repo_path }}"
+
+    - name: Adicionar arquivo ao git
+      ansible.builtin.command: git add {{ file_to_commit }}
+      args:
+        chdir: "{{ repo_path }}"
+
+    - name: Commit com data/hora
+      ansible.builtin.command: >
+        git commit -m "Update watchers: {{ lookup('pipe', 'date +%Y-%m-%d_%H:%M:%S') }}"
+      args:
+        chdir: "{{ repo_path }}"
+      register: commit_result
+      failed_when: false
+
+    - name: Push para o GitHub
+      ansible.builtin.command: git push
+      args:
+        chdir: "{{ repo_path }}"
+      when: commit_result.rc == 0
