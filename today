@@ -1,0 +1,44 @@
+def save_metadata(es, watcher_id, data):
+    """Save or update metadata"""
+    
+    if data["interval"] != "15m":
+        return  # ignora outros intervalos
+
+    base_body = {
+        "index": data["index"],
+        "gte": data["gte"],
+        "interval": data["interval"],
+        "create_or_update": data["create_or_update"],
+        "updated_at": now_sp()
+    }
+
+    # Atualiza o documento atual (último estado conhecido)
+    latest_body = {
+        **base_body,
+        "is_version": False
+    }
+    es.index(index=INDEX_NAME, id=watcher_id, document=latest_body)
+
+    # Só cria nova versão se houve alteração real
+    if data["create_or_update"]:
+        version = get_next_version_number(es, watcher_id)
+        version_body = {
+            **base_body,
+            "is_version": True,
+            "version": version
+        }
+        version_id = f"{watcher_id}_v{version}"
+        es.index(index=INDEX_NAME, id=version_id, document=
+
+current["create_or_update"] = True if not meta else has_diff(current, meta)
+
+def get_metadata(es, watcher_id):
+    """Busca o último estado salvo (não versionado)"""
+    try:
+        res = es.get(index=INDEX_NAME, id=watcher_id)
+        doc = res["_source"]
+        if doc.get("is_version") is False:
+            return doc
+        return None
+    except Exception:
+        return None
