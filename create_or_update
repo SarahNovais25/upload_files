@@ -1,0 +1,78 @@
+import sys
+import json
+import logging
+from typing import Dict, Any
+
+from elasticsearch_custom import functions_elk
+from utils.watcher_objects import watcher
+
+logging.basicConfig(level=logging.INFO)
+
+def connect_elasticsearch(env: str):
+    """
+    Retorna a conexão com o ambiente correto do Elastic.
+    """
+    if env == "prod":
+        return functions_elk.connect("production", "alma")
+    elif env == "dev":
+        return functions_elk.connect("development", "alma")
+    elif env == "staging":
+        return functions_elk.connect("staging", "alma")
+    else:
+        raise ValueError(f"Ambiente '{env}' inválido!")
+
+def create_watcher(interval: str, indices: str, gte: str) -> Dict[str, Any]:
+    indices_list = indices.split(",")
+    return {
+        "trigger": {"schedule": {"interval": interval}},
+        "input": {
+            "search": {
+                "request": {
+                    "indices": indices_list,
+                    "body": {
+                        "query": {
+                            "range": {
+                                "@timestamp": {"gte": gte, "lt": "now"}
+                            }
+                        },
+                        "aggs": {
+                            "ultimos_dados_globais": {
+                                "global": {},
+                                "aggs": {
+                                    "ultimo_ts": {
+                                        "max": {"field": "@timestamp"}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+def send_watcher(elastic, watcher_id: str, watcher_body: Dict[str, Any]):
+    try:
+        response = elastic.watcher.put_watch(watcher_id, watcher_body)
+        logging.info(f"Watcher '{watcher_id}' criado com sucesso!")
+        return response
+    except BaseException as err:
+        logging.exception(err)
+        raise
+
+if __name__ == "__main__":
+    if len(sys.argv) == 6:
+        interval = sys.argv[1]
+        indices = sys.argv[2]
+        gte = sys.argv[3]
+        pipeline_name = sys.argv[4]
+        env = sys.argv[5]
+
+        elastic = connect_elasticsearch(env)
+        body = create_watcher(interval, indices, gte)
+        result = send_watcher(elastic, pipeline_name, body)
+        print(json.dumps(result))
+        sys.exit(0)
+    else:
+        print("Uso: python3 create_watcher.py <interval> <indices> <gte> <pipeline_name> <env>")
+        sys.exit(1)
